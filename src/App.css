@@ -1,38 +1,75 @@
-.App {
-  text-align: center;
-}
+.app-container {
+  margin-left: 40px;
+  width: 400px;
+  height: 400px;
+  border: 2px solid black;
+  border-radius: 9px;
+  .header-info {
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+    background-image: linear-gradient(to right, #005EB8, darkBlue);
+    padding: 20px;
+    color: white;
+    font-weight: bold;
+    border-radius: 7px;
+  } 
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+  .enter-acct {
+    text-align: center;
+    .account-number {
+      margin-top: 20px;
+      margin-right: 10px;
+    }
   }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+  .screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+  .action-buttons {
+    display: flex;
+    justify-content: space-evenly;
   }
+  
+  .withdrawl-container {
+    text-align: center;
+    .withdrawl-amount {
+      margin-right: 10px;
+    }
+  }
+
+  .check-balance-container {
+    margin-top: 30px;
+  }
+
+  .more-actions-container {
+    margin-top: 20px;
+    .question {
+      margin-bottom: 10px;
+    }
+  }
+  
+  .error-message {
+    text-align: center;
+    padding-top: 20px;
+    color: red;
+    font-weight: bold;
+  }
+
+  button {
+
+    padding: 6px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    border-radius: 6px;
+    border: none;
+
+    color: #fff;
+    background: linear-gradient(180deg, #005EB8 0%, darkBlue 100%);
+    background-origin: border-box;
+    box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
 }
+
