@@ -21,30 +21,34 @@ function App() {
   }, []);
 
   //function to hit our server using axios to get our data from postgres for a give account id
+  //this returns a boolean so that we know weather to procced or to stop because of an error
   var fetchData = async (id) => {
     //ensure there is a valid id
       if (id !== "" && id) {
         try {
           const response = await axios.get(`http://localhost:3001/api/data/${id}`);
           if (!response.data.name) {
+            //if we didn't get anythign back aka it was a bad account number then
+            //set all our values to default and return an
             setAccountName("")
             setAccountBalance(0)
             setAccountType("")
             setErrorMessage("We couldn't find this account number please try again")
-            return
+            return false
           }
           //once we have our data then we set our state variables to use later
           setAccountName(response.data.name)
           setAccountBalance(response.data.amount)
           setAccountType(response.data.type)
           setErrorMessage("")
-         
+          return true
         } catch (error) {
           console.error('Error fetching data', error);
           setErrorMessage("We couldn't find your account please enter a different account number.")
-          
+          return false
         }
       }
+      return false
   };
 
   //this is a function to either deposit or wihdrawl for the account with a give id
@@ -64,7 +68,7 @@ function App() {
 
   
   //this is the first step in our process, prompting the user for their account number
-  const getAccountDetails = () => {
+  const getAccountDetails = async () => {
    
     //get the number from our input field
     let acctNumber = document.getElementById("account-number").value
@@ -73,9 +77,9 @@ function App() {
       return
     }
     
-  //grab the data from postgres and set state so its helpful
-    fetchData(acctNumber)
-    
+    //grab the data from postgres and set state so its helpful
+    let success = await fetchData(acctNumber)
+  
     //using this as a check for the "daily withdrawl limit", if the account we encountered
     //is different than the previous one then we reset this value. This doesn't really
     //work in a lot of edge cases and there are better ways to do this that I'd like to chat about
@@ -88,7 +92,7 @@ function App() {
     //update our step so they can move forward if it was a success
     //we check to make sure the fetch call was successful here before moving on to the
     //next step
-    if (accountName) setStep("pick-action")
+    if (success) setStep("pick-action")
 
   }
 
@@ -107,10 +111,10 @@ function App() {
     if (step === "pick-action") {
       return (
         <div>
-          <h4 className="action-info">Thank you what would you like to do on the {accountName} account?</h4>
+          <h4 className="action-info">What would you like to do with <strong>{accountName}</strong> account?</h4>
           <div className="action-buttons">
             <button onClick={() => setStep("check-balance")}>Check Balance</button>
-            <button onClick={() => setStep("withdrawl")}>Withdraw</button>
+            <button onClick={() => setStep("withdrawl")}>Withdrawl</button>
             <button onClick={() => setStep("deposit")}>Deposit</button>
          </div>
         </div>
@@ -121,7 +125,7 @@ function App() {
     if (step === "check-balance") {
       return (
         <div className="check-balance-container">
-          <span>Your balance in {accountName} is <strong>${accountBalance}</strong></span>
+          <span>Your balance in <strong>{accountName}</strong> is <strong>${accountBalance}</strong></span>
           {needMoreActions()}
         </div>
       )
@@ -130,7 +134,7 @@ function App() {
     if (step === "withdrawl") {
       return (
         <div className="withdrawl-container">
-          <h4>How much would you like to withdrawl today?</h4>
+          <h4>How much would you like to withdrawl from <strong>{accountName}</strong> today?</h4>
           <input className="withdrawl-amount" id="withdrawl-amount" type="number" autoFocus={true}/>
           <button onClick={handleWithdrawl}>Submit</button>
         </div>
@@ -140,7 +144,7 @@ function App() {
     if (step === "deposit") {
       return (
         <div className='withdrawl-container'>
-          <h4>How Much would you like to deposit today?</h4>
+          <h4>How much would you like to deposit in to <strong>{accountName}</strong> today?</h4>
           <input className="withdrawl-amount" id="deposit-amount" type="number" autoFocus={true}/>
           <button onClick={handleDeposit}>Submit</button>
         </div>
@@ -254,6 +258,10 @@ function App() {
       <header className="header-info">Welcome to BigMoney ATM!</header>
       <div className='error-message'>{errorMessage}</div>
       <div className="screen">{renderStep()}</div>
+      <div className='home-button'>
+       <button onClick={() => setStep("enter-account")}>Take me home</button>
+      </div>
+      
     </div>
   );
 }

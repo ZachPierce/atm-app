@@ -4,6 +4,7 @@
   height: 400px;
   border: 2px solid black;
   border-radius: 9px;
+  position: relative;
   .header-info {
 
     background-image: linear-gradient(to right, #005EB8, darkBlue);
@@ -62,8 +63,18 @@
     text-align: center;
   }
 
+  .home-button {
+    position: absolute;
+    bottom: 40px;
+    left: 140px;
+  }
+
   input {
     height: 22px;
+  }
+
+  h4 {
+    font-weight: normal;
   }
 
   button {
