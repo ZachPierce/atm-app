@@ -11,6 +11,7 @@
     color: white;
     font-weight: bold;
     border-radius: 7px;
+    text-align: center;
   } 
 
   .enter-acct {
@@ -24,6 +25,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 10px;
   }
   .action-buttons {
     display: flex;
@@ -45,6 +47,7 @@
     margin-top: 20px;
     .question {
       margin-bottom: 10px;
+      text-align: center;
     }
   }
   
@@ -53,6 +56,10 @@
     padding-top: 20px;
     color: red;
     font-weight: bold;
+  }
+
+  input {
+    height: 22px;
   }
 
   button {

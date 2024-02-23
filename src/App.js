@@ -1,8 +1,9 @@
 import './App.css';
 import {useState} from 'react';
 
+
 function App() {
-  
+ 
   //all of our state values managed here
   //account details first
   var [accountNumber, setAccountNumber] = useState(null);
@@ -11,16 +12,39 @@ function App() {
   var [accountType, setAccountType] = useState("")
   var [step, setStep] = useState("enter-account");
   var [errorMessage, setErrorMessage] = useState("")
+  var [totalWithdrawnToday, setTotalWithdrawnToday] = useState(0)
   
+  var fetchData = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/data/${id}`);
+      const jsonData = await response.json();
+      return jsonData;
+    } catch (error) {
+      console.error('Error fetching data', error);
+    }
+  };
+ 
   
-
   //this is the first step in our process, prompting the user for their account number
   const getAccountDetails = () => {
+   
     //get the number from our input field
     let acctNumber = document.getElementById("account-number").value
+    if (!acctNumber) {
+      setErrorMessage("Please enter a valid account number")
+      return
+    }
     
+    let data = fetchData(acctNumber)
+    console.log('data', data)
     //grab the data from postgres and set state so its helpful
 
+    //using thsi for the "daily withdrawl limit", if the account we encountered
+    //is different than the previous one then we reset this value. This doesn't really
+    //work in a lot of edge cases and There are better ways to do this that I'd like to chat about
+    if (acctNumber != accountNumber) {
+      setTotalWithdrawnToday(0)
+    }
     setAccountNumber(acctNumber)
     
     //update our step so they can move forward
@@ -34,7 +58,8 @@ function App() {
       return (
         <div className="enter-acct">
           <h4>Please enter your account number to get started!</h4>
-          <input calssName="account-number" id="account-number"></input> <button onClick={getAccountDetails}>Submit</button>
+          <input className="account-number" id="account-number" autofocus="true" type="number"/> 
+          <button onClick={getAccountDetails}>Submit</button>
         </div>
       )
     }
@@ -66,7 +91,8 @@ function App() {
       return (
         <div className="withdrawl-container">
           <h4>How much would you like to withdrawl today?</h4>
-          <input className="withdrawl-amount" id="withdrawl-amount"></input><button onClick={handleWithdrawl}>Submit</button>
+          <input className="withdrawl-amount" id="withdrawl-amount" type="number" autofocus="true"/>
+          <button onClick={handleWithdrawl}>Submit</button>
         </div>
       )
     }
@@ -75,7 +101,8 @@ function App() {
       return (
         <div className='withdrawl-container'>
           <h4>How Much would you like to deposit today?</h4>
-          <input className="withdrawl-amount" id="deposit-amount"></input><button onClick={handleDeposit}>Submit</button>
+          <input className="withdrawl-amount" id="deposit-amount" type="number" autofocus="true"/>
+          <button onClick={handleDeposit}>Submit</button>
         </div>
       )
     }
@@ -107,7 +134,12 @@ function App() {
 
   const handleDeposit = () => {
     let depositAmount = document.getElementById("deposit-amount").value
-    let totalBalance = 500
+    let totalBalance = 1000
+
+    //determing the total balance of their credit account to limit the deposit
+    if (accountType === "credit") {
+      totalBalance = Math.abs(accountBalance)
+    }
 
     //error handling
     if (depositAmount > 1000) {
@@ -128,7 +160,7 @@ function App() {
 
   const handleWithdrawl = () => {
     //make sure we can actually withdrawl this amount based on rules presented
-    let totalWithdrawnToday = 0
+    
     let totalAllotment = 399
     let withdrawlAmount = document.getElementById("withdrawl-amount").value
 
@@ -161,6 +193,8 @@ function App() {
 
     //if we made it this far then we want to actually deduct the amount from our postgres database
 
+    //this is a cheesy way to keep track of this but ive discussed the best solution in the notes
+    setTotalWithdrawnToday(totalWithdrawnToday + withdrawlAmount)
     //prompt the user for any more actions
     setErrorMessage("")
     setStep("finished")
