@@ -58,6 +58,10 @@
     font-weight: bold;
   }
 
+  .action-info {
+    text-align: center;
+  }
+
   input {
     height: 22px;
   }

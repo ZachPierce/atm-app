@@ -31,7 +31,7 @@ function App() {
             setAccountBalance(0)
             setAccountType("")
             setErrorMessage("We couldn't find this account number please try again")
-            
+            return
           }
           //once we have our data then we set our state variables to use later
           setAccountName(response.data.name)
@@ -98,7 +98,7 @@ function App() {
       return (
         <div className="enter-acct">
           <h4>Please enter your account number to get started!</h4>
-          <input className="account-number" id="account-number" autofocus="true" type="number"/> 
+          <input className="account-number" id="account-number" autoFocus={true} type="number"/> 
           <button onClick={getAccountDetails}>Submit</button>
         </div>
       )
@@ -107,7 +107,7 @@ function App() {
     if (step === "pick-action") {
       return (
         <div>
-          <h4>Thank you what would you like to do now?</h4>
+          <h4 className="action-info">Thank you what would you like to do on the {accountName} account?</h4>
           <div className="action-buttons">
             <button onClick={() => setStep("check-balance")}>Check Balance</button>
             <button onClick={() => setStep("withdrawl")}>Withdraw</button>
@@ -131,7 +131,7 @@ function App() {
       return (
         <div className="withdrawl-container">
           <h4>How much would you like to withdrawl today?</h4>
-          <input className="withdrawl-amount" id="withdrawl-amount" type="number" autofocus="true"/>
+          <input className="withdrawl-amount" id="withdrawl-amount" type="number" autoFocus={true}/>
           <button onClick={handleWithdrawl}>Submit</button>
         </div>
       )
@@ -141,7 +141,7 @@ function App() {
       return (
         <div className='withdrawl-container'>
           <h4>How Much would you like to deposit today?</h4>
-          <input className="withdrawl-amount" id="deposit-amount" type="number" autofocus="true"/>
+          <input className="withdrawl-amount" id="deposit-amount" type="number" autoFocus={true}/>
           <button onClick={handleDeposit}>Submit</button>
         </div>
       )
@@ -150,7 +150,7 @@ function App() {
     if (step === "finished") {
       return (
         <div>
-          Thank you for your service {accountName}!
+          Thank you for your service!
           {needMoreActions()}
         </div>
       )
@@ -224,14 +224,14 @@ function App() {
     //this client is allowing any withdrawls as long as they are in $5 increments
     if (withdrawlAmount % 5 !== 0) {
       //display message that say you have to enter denominations of 5
-      setErrorMessage("Please enter a value that is divisible by 5")
+      setErrorMessage("You can only withdrawl in increments of $5.")
       return
     }
 
     //checking that they have the funds to do so
     if (withdrawlAmount > totalAllotment) {
       //display message that says they don't have sufficient funds...rip
-      setErrorMessage("Insufficient funds, you have x amount remaining")
+      setErrorMessage("Insufficient funds")
       return
     }
 
