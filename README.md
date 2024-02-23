@@ -1,4 +1,4 @@
-# Getting Started the ATM APP
+# Getting Started with the ATM APP
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
