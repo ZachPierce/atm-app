@@ -15,6 +15,7 @@ function App() {
   var [errorMessage, setErrorMessage] = useState("")
   var [totalWithdrawnToday, setTotalWithdrawnToday] = useState(0)
   var [customerName, setCustomerName] = useState("")
+  var [actionType, setActionType] = useState("") //this is used for checkbalance, withdrawl and deposit
 
   useEffect(() => {
     fetchData();
@@ -26,10 +27,11 @@ function App() {
     //ensure there is a valid id
       if (id !== "" && id) {
         try {
+          //hit our api endpoint to get postgres data
           const response = await axios.get(`http://localhost:3001/api/data/${id}`);
           if (!response.data.name) {
             //if we didn't get anythign back aka it was a bad account number then
-            //set all our values to default and return an
+            //set all our values to default and return
             setAccountName("")
             setAccountBalance(0)
             setAccountType("")
@@ -155,6 +157,7 @@ function App() {
   }
 
   const renderActions = () => {
+    
     //this step handles the check balance
     if (step === "check-balance") {
       return (
@@ -178,7 +181,7 @@ function App() {
     if (step === "deposit") {
       return (
         <div className='withdrawl-container'>
-          <h4 className='withdrawl-details'>How much would you like to deposit in to <strong>{accountName}</strong> today?</h4>
+          <h4 className='withdrawl-details'>How much would you like to deposit into <strong>{accountName}</strong> today?</h4>
           <input className="withdrawl-amount" id="deposit-amount" type="number" autoFocus={true}/>
           <button onClick={handleDeposit}>Submit</button>
         </div>
@@ -187,16 +190,27 @@ function App() {
 
       //this step handles the finished state
       if (step === "finished") {
-      return (
-        <div className='finished-message'>
-          Thank you for your service!
-          {renderDone()}
-        </div>
-      )
+        //render a different message here depending on the action that the user did
+        let message = "Thank you, have a nice day!"
+        if (actionType === "withdrawl") {
+          message = "Your withdrawl from " + accountName + " was successful!"
+        }
+
+        if (actionType === "deposit") {
+          message = "Your deposit into " + accountName + " was successful!"
+        }
+
+        return (
+          <div className='finished-message'>
+            {message}
+            {renderDone()}
+          </div>
+        )
     }
      
   }
 
+  //this simply sends the user back to the enter account number screen
   const renderDone = () => {
     return (
       <div className='done-button'>
@@ -234,13 +248,17 @@ function App() {
     //set our new values
     setAccountBalance(newBalance)
     setErrorMessage("")
+    setActionType("deposit")
     setStep("finished")
   }
 
   const handleWithdrawl = (withdrawlAmount) => {
     //make sure we can actually withdrawl this amount based on rules presented
     
-    let totalAllotment = accountBalance
+    //setting their totalallotment to the account balance for obvious reasons, we 
+    //do an absolute value for the credit accounts, this is a bit funky but I added some notes 
+    //to the wrap up about it
+    let totalAllotment = Math.abs(accountBalance)
     //set our value to the default argument, if we did a quick cash option 
     //then ths will be populated, other wise the user will be entering tha amount
     //manually
@@ -268,7 +286,7 @@ function App() {
     //checking that they have the funds to do so
     if (withdrawlAmount > totalAllotment) {
       //display message that says they don't have sufficient funds...rip
-      setErrorMessage("Insufficient funds")
+      setErrorMessage("Insufficient funds, please try again.")
       return
     }
 
@@ -281,6 +299,7 @@ function App() {
     setTotalWithdrawnToday(totalWithdrawnToday + withdrawlAmount)
     //set our new values and advance the step
     setAccountBalance(newBalance)
+    setActionType("withdrawl")
     setErrorMessage("")
     setStep("finished")
     
