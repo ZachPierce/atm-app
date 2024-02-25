@@ -14,37 +14,44 @@ function App() {
   var [step, setStep] = useState("enter-account");
   var [errorMessage, setErrorMessage] = useState("")
   var [totalWithdrawnToday, setTotalWithdrawnToday] = useState(0)
-
+  var [customerName, setCustomerName] = useState("")
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  //function to hit our server using axios to get our data from postgres for a give account id
+  //function to hit our server using axios to get our data from postgres for a given account id
+  //this returns a boolean so that we know weather to procced or to stop because of an error
   var fetchData = async (id) => {
     //ensure there is a valid id
       if (id !== "" && id) {
         try {
           const response = await axios.get(`http://localhost:3001/api/data/${id}`);
           if (!response.data.name) {
+            //if we didn't get anythign back aka it was a bad account number then
+            //set all our values to default and return an
             setAccountName("")
             setAccountBalance(0)
             setAccountType("")
             setErrorMessage("We couldn't find this account number please try again")
-            
+            return false
           }
           //once we have our data then we set our state variables to use later
+          let tempString = response.data.name.split(" ")
+          let customerName = tempString[0]
+          setCustomerName(customerName.slice(0,-1))
           setAccountName(response.data.name)
           setAccountBalance(response.data.amount)
           setAccountType(response.data.type)
           setErrorMessage("")
-         
+          return true
         } catch (error) {
           console.error('Error fetching data', error);
           setErrorMessage("We couldn't find your account please enter a different account number.")
-          
+          return false
         }
       }
+      return false
   };
 
   //this is a function to either deposit or wihdrawl for the account with a give id
@@ -64,7 +71,7 @@ function App() {
 
   
   //this is the first step in our process, prompting the user for their account number
-  const getAccountDetails = () => {
+  const getAccountDetails = async () => {
    
     //get the number from our input field
     let acctNumber = document.getElementById("account-number").value
@@ -73,9 +80,9 @@ function App() {
       return
     }
     
-  //grab the data from postgres and set state so its helpful
-    fetchData(acctNumber)
-    
+    //grab the data from postgres and set state so its helpful
+    let success = await fetchData(acctNumber)
+  
     //using this as a check for the "daily withdrawl limit", if the account we encountered
     //is different than the previous one then we reset this value. This doesn't really
     //work in a lot of edge cases and there are better ways to do this that I'd like to chat about
@@ -88,41 +95,72 @@ function App() {
     //update our step so they can move forward if it was a success
     //we check to make sure the fetch call was successful here before moving on to the
     //next step
-    if (accountName) setStep("pick-action")
+    if (success) setStep("pick-action")
 
   }
 
-  const renderStep = () => {
-    //this step is for entering your account number
+  const renderLogin = () => {
+  //this step is for entering your account number
     if (step === "enter-account") {
       return (
         <div className="enter-acct">
-          <h4>Please enter your account number to get started!</h4>
-          <input className="account-number" id="account-number" autofocus="true" type="number"/> 
+          <h4 className="enter-acct-text">Please enter your account number to get started!</h4>
+          <input className="account-number" id="account-number" autoFocus={true} type="number"/> 
           <button onClick={getAccountDetails}>Submit</button>
         </div>
       )
     }
+  }
+
+  const renderHome = () => {
+  
     //this step is for selecting what action they would like to take (check balance, withdraw, or deposit)
-    if (step === "pick-action") {
+    if (step !== "enter-account") {
       return (
-        <div>
-          <h4>Thank you what would you like to do now?</h4>
-          <div className="action-buttons">
-            <button onClick={() => setStep("check-balance")}>Check Balance</button>
-            <button onClick={() => setStep("withdrawl")}>Withdraw</button>
-            <button onClick={() => setStep("deposit")}>Deposit</button>
-         </div>
+        <div className='home-actions-container'>
+
+          <div className='row'>
+            
+            <div className='child'>
+              <h4 className="action-info">Welcome</h4>
+              <div className='customer-name'>{customerName}</div>
+            </div>
+            
+            <div className="child action-buttons">
+              <button  className="btn" onClick={() => setStep("withdrawl")}>Withdrawl</button>
+              <button  className="btn" onClick={() => setStep("deposit")}>Deposit</button>
+            </div>
+
+          </div>
+
+          <div className='row'>
+            
+            <div className='child'>
+              <h4 className="action-info">Account</h4>
+              <div className='customer-name'>{accountName}</div>
+            </div>
+            
+            <div className="child action-buttons">
+              <button className="btn" onClick={() => setStep("check-balance")}>Check Balance</button>
+              <button o className="btn" onClick={() => handleWithdrawl(20)}>Quick Cash $20</button>
+            </div>
+
+          </div>
+
         </div>
       )
     }
+    
+  
+  }
 
+  const renderActions = () => {
     //this step handles the check balance
     if (step === "check-balance") {
       return (
         <div className="check-balance-container">
-          <span>Your balance in {accountName} is <strong>${accountBalance}</strong></span>
-          {needMoreActions()}
+          <div className='balance-details'>The balance of your account "{accountName}" is ${accountBalance}</div>
+          {renderDone()}
         </div>
       )
     }
@@ -130,9 +168,9 @@ function App() {
     if (step === "withdrawl") {
       return (
         <div className="withdrawl-container">
-          <h4>How much would you like to withdrawl today?</h4>
-          <input className="withdrawl-amount" id="withdrawl-amount" type="number" autofocus="true"/>
-          <button onClick={handleWithdrawl}>Submit</button>
+          <h4 className='withdrawl-details'>{customerName}, how much would you like to withdrawl from your account "{accountName}" today?</h4>
+          <input className="withdrawl-amount" id="withdrawl-amount" type="number" autoFocus={true}/>
+          <button onClick={() =>handleWithdrawl(document.getElementById("withdrawl-amount").value)}>Submit</button>
         </div>
       )
     }
@@ -140,34 +178,29 @@ function App() {
     if (step === "deposit") {
       return (
         <div className='withdrawl-container'>
-          <h4>How Much would you like to deposit today?</h4>
-          <input className="withdrawl-amount" id="deposit-amount" type="number" autofocus="true"/>
+          <h4 className='withdrawl-details'>How much would you like to deposit in to <strong>{accountName}</strong> today?</h4>
+          <input className="withdrawl-amount" id="deposit-amount" type="number" autoFocus={true}/>
           <button onClick={handleDeposit}>Submit</button>
         </div>
       )
     }
-    //this step handles the finished state
-    if (step === "finished") {
+
+      //this step handles the finished state
+      if (step === "finished") {
       return (
-        <div>
-          Thank you for your service {accountName}!
-          {needMoreActions()}
+        <div className='finished-message'>
+          Thank you for your service!
+          {renderDone()}
         </div>
       )
     }
-   
+     
   }
 
-  //this is a function to prompt the user if they need to do anything else
-  //made this so the code wasn't repeated a bunch above
-  const needMoreActions = () => {
+  const renderDone = () => {
     return (
-      <div className="more-actions-container">
-        <div className='question'>Do you need anything else?</div> 
-        <div className='action-buttons'>
-          <button onClick={() => setStep("enter-account")}>Yes</button>
-          <button onClick={() => setStep("enter-account")}>No</button>
-        </div>
+      <div className='done-button'>
+        <button onClick={() => setStep("enter-account")}>I'm Done</button>
       </div>
     )
   }
@@ -183,7 +216,7 @@ function App() {
 
     //error handling
     if (depositAmount > 1000) {
-      setErrorMessage("You can only deposit $1000 at a single time.")
+      setErrorMessage("You can only deposit $1000 at a time.")
       return
     }
 
@@ -197,17 +230,21 @@ function App() {
     let newBalance = parseFloat(accountBalance) + parseFloat(depositAmount)
    
     alterAccountBalance(accountNumber, newBalance)
-
+   
+    //set our new values
+    setAccountBalance(newBalance)
     setErrorMessage("")
     setStep("finished")
   }
 
-  const handleWithdrawl = () => {
+  const handleWithdrawl = (withdrawlAmount) => {
     //make sure we can actually withdrawl this amount based on rules presented
     
     let totalAllotment = accountBalance
-    let withdrawlAmount = document.getElementById("withdrawl-amount").value
-
+    //set our value to the default argument, if we did a quick cash option 
+    //then ths will be populated, other wise the user will be entering tha amount
+    //manually
+  
     //error handling here
     if (withdrawlAmount > 200) {
       //display message that you aren't allowed to withdrawl this much
@@ -224,14 +261,14 @@ function App() {
     //this client is allowing any withdrawls as long as they are in $5 increments
     if (withdrawlAmount % 5 !== 0) {
       //display message that say you have to enter denominations of 5
-      setErrorMessage("Please enter a value that is divisible by 5")
+      setErrorMessage("You can only withdrawl in increments of $5.")
       return
     }
 
     //checking that they have the funds to do so
     if (withdrawlAmount > totalAllotment) {
       //display message that says they don't have sufficient funds...rip
-      setErrorMessage("Insufficient funds, you have x amount remaining")
+      setErrorMessage("Insufficient funds")
       return
     }
 
@@ -242,7 +279,8 @@ function App() {
 
     //this is a cheesy way to keep track of this but ive discussed better solutions in the notes
     setTotalWithdrawnToday(totalWithdrawnToday + withdrawlAmount)
-    //prompt the user for any more actions
+    //set our new values and advance the step
+    setAccountBalance(newBalance)
     setErrorMessage("")
     setStep("finished")
     
@@ -251,9 +289,15 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="header-info">Welcome to BigMoney ATM!</header>
+      <header className="header-info">
+        <div>ATM</div>
+        <div className="home-button" onClick={() => setStep("enter-account")}>Start Over</div>
+      </header>
+      
+      <div className="screen">{renderLogin()}</div>
+      <div className="screen">{renderHome()}</div>
+      <div className="screen">{renderActions()}</div>
       <div className='error-message'>{errorMessage}</div>
-      <div className="screen">{renderStep()}</div>
     </div>
   );
 }
