@@ -14,13 +14,13 @@ function App() {
   var [step, setStep] = useState("enter-account");
   var [errorMessage, setErrorMessage] = useState("")
   var [totalWithdrawnToday, setTotalWithdrawnToday] = useState(0)
-
+  var [customerName, setCustomerName] = useState("")
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  //function to hit our server using axios to get our data from postgres for a give account id
+  //function to hit our server using axios to get our data from postgres for a given account id
   //this returns a boolean so that we know weather to procced or to stop because of an error
   var fetchData = async (id) => {
     //ensure there is a valid id
@@ -37,6 +37,9 @@ function App() {
             return false
           }
           //once we have our data then we set our state variables to use later
+          let tempString = response.data.name.split(" ")
+          let customerName = tempString[0]
+          setCustomerName(customerName.slice(0,-1))
           setAccountName(response.data.name)
           setAccountBalance(response.data.amount)
           setAccountType(response.data.type)
@@ -96,37 +99,68 @@ function App() {
 
   }
 
-  const renderStep = () => {
-    //this step is for entering your account number
+  const renderLogin = () => {
+  //this step is for entering your account number
     if (step === "enter-account") {
       return (
         <div className="enter-acct">
-          <h4>Please enter your account number to get started!</h4>
+          <h4 className="enter-acct-text">Please enter your account number to get started!</h4>
           <input className="account-number" id="account-number" autoFocus={true} type="number"/> 
           <button onClick={getAccountDetails}>Submit</button>
         </div>
       )
     }
+  }
+
+  const renderHome = () => {
+  
     //this step is for selecting what action they would like to take (check balance, withdraw, or deposit)
-    if (step === "pick-action") {
+    if (step !== "enter-account") {
       return (
-        <div>
-          <h4 className="action-info">What would you like to do with <strong>{accountName}</strong> account?</h4>
-          <div className="action-buttons">
-            <button onClick={() => setStep("check-balance")}>Check Balance</button>
-            <button onClick={() => setStep("withdrawl")}>Withdrawl</button>
-            <button onClick={() => setStep("deposit")}>Deposit</button>
-         </div>
+        <div className='home-actions-container'>
+
+          <div className='row'>
+            
+            <div className='child'>
+              <h4 className="action-info">Welcome</h4>
+              <div className='customer-name'>{customerName}</div>
+            </div>
+            
+            <div className="child action-buttons">
+              <button  className="btn" onClick={() => setStep("withdrawl")}>Withdrawl</button>
+              <button  className="btn" onClick={() => setStep("deposit")}>Deposit</button>
+            </div>
+
+          </div>
+
+          <div className='row'>
+            
+            <div className='child'>
+              <h4 className="action-info">Account</h4>
+              <div className='customer-name'>{accountName}</div>
+            </div>
+            
+            <div className="child action-buttons">
+              <button className="btn" onClick={() => setStep("check-balance")}>Check Balance</button>
+              <button o className="btn" onClick={() => handleWithdrawl(20)}>Quick Cash $20</button>
+            </div>
+
+          </div>
+
         </div>
       )
     }
+    
+  
+  }
 
+  const renderActions = () => {
     //this step handles the check balance
     if (step === "check-balance") {
       return (
         <div className="check-balance-container">
-          <span>Your balance in <strong>{accountName}</strong> is <strong>${accountBalance}</strong></span>
-          {needMoreActions()}
+          <div className='balance-details'>The balance of your account "{accountName}" is ${accountBalance}</div>
+          {renderDone()}
         </div>
       )
     }
@@ -134,9 +168,9 @@ function App() {
     if (step === "withdrawl") {
       return (
         <div className="withdrawl-container">
-          <h4>How much would you like to withdrawl from <strong>{accountName}</strong> today?</h4>
+          <h4 className='withdrawl-details'>{customerName}, how much would you like to withdrawl from your account "{accountName}" today?</h4>
           <input className="withdrawl-amount" id="withdrawl-amount" type="number" autoFocus={true}/>
-          <button onClick={handleWithdrawl}>Submit</button>
+          <button onClick={() =>handleWithdrawl(document.getElementById("withdrawl-amount").value)}>Submit</button>
         </div>
       )
     }
@@ -144,34 +178,29 @@ function App() {
     if (step === "deposit") {
       return (
         <div className='withdrawl-container'>
-          <h4>How much would you like to deposit in to <strong>{accountName}</strong> today?</h4>
+          <h4 className='withdrawl-details'>How much would you like to deposit in to <strong>{accountName}</strong> today?</h4>
           <input className="withdrawl-amount" id="deposit-amount" type="number" autoFocus={true}/>
           <button onClick={handleDeposit}>Submit</button>
         </div>
       )
     }
-    //this step handles the finished state
-    if (step === "finished") {
+
+      //this step handles the finished state
+      if (step === "finished") {
       return (
-        <div>
+        <div className='finished-message'>
           Thank you for your service!
-          {needMoreActions()}
+          {renderDone()}
         </div>
       )
     }
-   
+     
   }
 
-  //this is a function to prompt the user if they need to do anything else
-  //made this so the code wasn't repeated a bunch above
-  const needMoreActions = () => {
+  const renderDone = () => {
     return (
-      <div className="more-actions-container">
-        <div className='question'>Do you need anything else?</div> 
-        <div className='action-buttons'>
-          <button onClick={() => setStep("enter-account")}>Yes</button>
-          <button onClick={() => setStep("enter-account")}>No</button>
-        </div>
+      <div className='done-button'>
+        <button onClick={() => setStep("enter-account")}>I'm Done</button>
       </div>
     )
   }
@@ -187,7 +216,7 @@ function App() {
 
     //error handling
     if (depositAmount > 1000) {
-      setErrorMessage("You can only deposit $1000 at a single time.")
+      setErrorMessage("You can only deposit $1000 at a time.")
       return
     }
 
@@ -201,17 +230,21 @@ function App() {
     let newBalance = parseFloat(accountBalance) + parseFloat(depositAmount)
    
     alterAccountBalance(accountNumber, newBalance)
-
+   
+    //set our new values
+    setAccountBalance(newBalance)
     setErrorMessage("")
     setStep("finished")
   }
 
-  const handleWithdrawl = () => {
+  const handleWithdrawl = (withdrawlAmount) => {
     //make sure we can actually withdrawl this amount based on rules presented
     
     let totalAllotment = accountBalance
-    let withdrawlAmount = document.getElementById("withdrawl-amount").value
-
+    //set our value to the default argument, if we did a quick cash option 
+    //then ths will be populated, other wise the user will be entering tha amount
+    //manually
+  
     //error handling here
     if (withdrawlAmount > 200) {
       //display message that you aren't allowed to withdrawl this much
@@ -246,7 +279,8 @@ function App() {
 
     //this is a cheesy way to keep track of this but ive discussed better solutions in the notes
     setTotalWithdrawnToday(totalWithdrawnToday + withdrawlAmount)
-    //prompt the user for any more actions
+    //set our new values and advance the step
+    setAccountBalance(newBalance)
     setErrorMessage("")
     setStep("finished")
     
@@ -255,13 +289,15 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="header-info">Welcome to BigMoney ATM!</header>
-      <div className='error-message'>{errorMessage}</div>
-      <div className="screen">{renderStep()}</div>
-      <div className='home-button'>
-       <button onClick={() => setStep("enter-account")}>Take me home</button>
-      </div>
+      <header className="header-info">
+        <div>ATM</div>
+        <div className="home-button" onClick={() => setStep("enter-account")}>Start Over</div>
+      </header>
       
+      <div className="screen">{renderLogin()}</div>
+      <div className="screen">{renderHome()}</div>
+      <div className="screen">{renderActions()}</div>
+      <div className='error-message'>{errorMessage}</div>
     </div>
   );
 }
