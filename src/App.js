@@ -259,10 +259,7 @@ function App() {
     //do an absolute value for the credit accounts, this is a bit funky but I added some notes 
     //to the wrap up about it
     let totalAllotment = Math.abs(accountBalance)
-    //set our value to the default argument, if we did a quick cash option 
-    //then ths will be populated, other wise the user will be entering tha amount
-    //manually
-  
+    
     //error handling here
     if (withdrawlAmount > 200) {
       //display message that you aren't allowed to withdrawl this much
@@ -306,6 +303,11 @@ function App() {
   }
 
 
+
+  //the idea here is that we have a stepped approach to rendering the app, enter acct number aka render login
+  //render our home sreen which displays all the available actions they can take
+  //the render actions function will show the details of the actions that they took aka how much to withdrawl etc
+  //then we have our error handling at the bottom
   return (
     <div className="app-container">
       <header className="header-info">
