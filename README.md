@@ -1,3 +1,7 @@
+# Overview
+
+This was a simple project that emulates a very basic ATM. I wanted to get familiar with using react/node and postgres in a full stack context.
+
 # Getting Started with the ATM APP
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
